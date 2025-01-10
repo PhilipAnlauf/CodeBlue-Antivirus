@@ -305,6 +305,9 @@ const int getFileSize(const string& filePath)
     return (end-begin);
 }
 
+
+//==================
+
 const void directroyLoop(const string& parentDirectory)
 {
     for (const auto & entry : filesystem::directory_iterator(parentDirectory)) 
