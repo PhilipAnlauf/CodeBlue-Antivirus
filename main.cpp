@@ -232,7 +232,7 @@ const void stringAnalyze(const string& heldString)
     {
         if (heldString.find(keywordListCharacters[i]) != string::npos && !isSus)
         {
-            cout << "Sus word found: " << keywordList[i] << endl;
+            cout << "Suspicous word found: " << keywordList[i] << endl;
             isSus = true;
             goto done;
         }
@@ -242,7 +242,7 @@ const void stringAnalyze(const string& heldString)
     {
         if (heldString.find(keywordListCharacters[i]) != string::npos && !isSus)
         {
-            cout << "Sus word found: " << keywordListCharacters[i] << endl;
+            cout << "Suspicous word found: " << keywordListCharacters[i] << endl;
             isSus = true;
             goto done;
         }
@@ -252,7 +252,7 @@ const void stringAnalyze(const string& heldString)
     {
         if (heldString.find(redTeamStrings[i]) != string::npos && !isSus)
         {
-            cout << "Sus word found: " << redTeamStrings[i] << endl;
+            cout << "Red team word found: " << redTeamStrings[i] << endl;
             isSus = true;
             goto done;
         }
@@ -290,7 +290,7 @@ const void checkIfSuspectFile(const string& filePathIN)
 
     if(isSus)
     {
-        cout << "Susfile; " << filePathIN << endl;
+        cout << "This file is suspicous; " << filePathIN << endl;
     }
 }
 
@@ -305,7 +305,6 @@ const int getFileSize(const string& filePath)
     return (end-begin);
 }
 
-
 //==================
 
 const void directroyLoop(const string& parentDirectory)
@@ -314,27 +313,24 @@ const void directroyLoop(const string& parentDirectory)
     { 
         try
         {
-            if(entry.path() != "/home/.ecryptfs/phil/.Private" && entry.path() != "/home/phil/.cache")
+
+            if (entry.is_regular_file() && getFileSize(entry.path()) <= 1000000 && isExecutable(entry.path())) 
             {
-                if (entry.is_regular_file() && getFileSize(entry.path()) <= 1000000 && isExecutable(entry.path())) 
-                {
-                    cout << "Checking out file: " << entry.path() << endl;
-                    checkIfSuspectFile(entry.path());
-                }
-                else if(!entry.is_regular_file() && entry.path() != "//bin" && entry.path() != "//sbin" && entry.path() != "//usr/bin" && entry.path() != "//usr/sbin" && entry.path() != "//lib" && entry.path() != "//usr/lib" && entry.path() != "//etc" && entry.path() != "//boot" && entry.path() != "//sys" && entry.path() != "//var/log" && entry.path() != "//var/lib" && entry.path() != "//dev" && entry.path() != "//proc")
-                {
-                    cout << "This is a directory: " << entry.path() << endl;
-                    directroyLoop(entry.path());
-                }
-                else
-                {
-                    cout << "File is too big or an unneeded folder" << endl;
-                }
+                checkIfSuspectFile(entry.path());
             }
+            else if(!entry.is_regular_file() && entry.path() != "//bin" && entry.path() != "//sbin" && entry.path() != "//usr/bin" && entry.path() != "//usr/sbin" && entry.path() != "//lib" && entry.path() != "//usr/lib" && entry.path() != "//etc" && entry.path() != "//boot" && entry.path() != "//sys" && entry.path() != "//var/log" && entry.path() != "//var/lib" && entry.path() != "//dev" && entry.path() != "//proc")
+            {
+                directroyLoop(entry.path());
+            }
+            else
+            {
+                //cout << "File is too big or an unneeded folder" << endl;
+            }
+
         }
         catch(const std::exception& e)
         {
-            cerr << e.what() << '\n';
+           // cerr << e.what() << '\n';
         }
         
     }
@@ -342,13 +338,20 @@ const void directroyLoop(const string& parentDirectory)
 
 int main()
 {
-    //Complete multithreading to search multiple directories at once
-
-
-    //Possibly multithread the file analyze instead of the search, still gets stuck on some files.   
+    cout << "CPU Has: " << thread::hardware_concurrency() << " threads." << endl;
+    cout << "Beginning search." << endl;
     thread searchman1(directroyLoop, "/");
     
     searchman1.join();
 
     return 0;
 }
+
+//TODO:
+    //Revamp the multithreading for the string dump analyzing.
+    //instead of going forward -> and <- backward make both go forward ->
+    //and make the total size that each thread has to search be divisible
+    //by the number of available threads, 0->end, 0->1/2 1/2->end, 0->1/3 1/3->2/3 2/3->end, etc.
+    //                                   1 thread    2 threads           3 threads
+    //acount for needing a thread for main OS operation and secondary threads for other antivirus features
+    //perhaps only max out at three threads
